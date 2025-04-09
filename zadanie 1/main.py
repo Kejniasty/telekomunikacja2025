@@ -6,21 +6,29 @@ import random
 def file_handling(input_name: str, output_name: str, mode='a', check_errors='a') -> None:
     match mode:
         case 'a':
-            encoded_file = []
             with open(input_name, 'r') as input_file:
+                encoded = []
                 for line in input_file:
                     print(line, end='')
-                    encoded_line = ec.kodowanie(line)
-                    temp_string = ''
-                    for word in encoded_line:
-                        for bit in word:
-                            temp_string += str(bit)
-                        temp_string += ' '
-                    encoded_file.append(temp_string)
+                    encoded += ec.kodowanie(line)
+                print()
+
+                error_byte = random.randint(0, len(encoded))
+                error_bit = random.randint(0, 7)
+                print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+
+                encoded[error_byte][error_bit] = 1 - encoded[error_byte][error_bit]
+
+                temp_string = ''
+                for word in encoded:
+                    for bit in word:
+                        temp_string += str(bit)
+                    temp_string += ' '
+                encoded.append(temp_string)
 
 
             with open(output_name, 'w') as output_file:
-                output_file.writelines(encoded_file)
+                output_file.write(temp_string)
 
         case 'b':
             with open(input_name, 'r') as input_file:
@@ -48,6 +56,12 @@ def file_handling(input_name: str, output_name: str, mode='a', check_errors='a')
                     encoded_file += ec.kodowanie(line)
             print()
 
+            error_byte = random.randint(0, len(encoded_file))
+            error_bit = random.randint(0, 7)
+            print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+
+            encoded_file[error_byte][error_bit] = 1 - encoded_file[error_byte][error_bit]
+
             temp_string = ''
             for word in encoded_file:
                 for bit in word:
@@ -71,6 +85,11 @@ def keyboard_handling(text, mode='a', check_errors='a'):
     match mode:
         case 'a':
             encoded_line = ec.kodowanie(text)
+
+            error_byte = random.randint(0, len(encoded_line))
+            error_bit = random.randint(0, 7)
+            print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+
             temp_string = ''
             for word in encoded_line:
                 for bit in word:
@@ -93,6 +112,9 @@ def keyboard_handling(text, mode='a', check_errors='a'):
 
         case 'c':
             encoded_line = ec.kodowanie(text)
+            error_byte = random.randint(0, len(encoded_line))
+            error_bit = random.randint(0, 7)
+            print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
             temp_string = ''
             for word in encoded_line:
                 for bit in word:
@@ -109,7 +131,7 @@ def keyboard_handling(text, mode='a', check_errors='a'):
 if __name__ == "__main__":
     encode = input("a. Koduj\nb. Dekoduj\nc. Pełny cykl (Koduj->Dekoduj):\n> ")
 
-    input_mode = input("a. Wczytaj z pliku\nb. Wpisz z klawiatury:\n>")
+    input_mode = input("a. Wczytaj z pliku\nb. Wpisz z klawiatury:\n> ")
     match input_mode:
         case 'a':
             input_name = input("Plik wejściowy:\n> ")
