@@ -14,21 +14,23 @@ H = np.array([
 def kodowanie(tekst):
     wynik = []
     for znak in tekst:
-        bity_danych = [int(bit) for bit in format(ord(znak), '08b')]
-        bity_parzystosci = (np.dot(H[:, :8], bity_danych) % 2).tolist()
+        bity_danych = []
+        for bit in format(ord(znak), '08b'):
+            bity_danych.append(int(bit))
+        bity_parzystosci = (np.dot(H[:, :8], bity_danych) % 2).tolist() # (polowa Hamminga * bity) modulo 2 każdego elementu
         wynik.append(bity_danych + bity_parzystosci)
     return wynik
 
 def sprawdz_poprawnosc(wiadomosc):
     odkodowana = []
-    for slowo in wiadomosc:
-        syndrom = np.dot(H, slowo) % 2
+    for bajt in wiadomosc:
+        syndrom = np.dot(H, bajt) % 2
         if any(syndrom):
             for i in range(len(H[0])):
                 if np.array_equal(H[:, i], syndrom):
-                    slowo[i] = 1 - slowo[i]
+                    bajt[i] = 1 - bajt[i]
                     break
-        odkodowana.append(slowo)
+        odkodowana.append(bajt)
     return odkodowana
 
 def dekodowanie(odkodowana):
@@ -40,18 +42,3 @@ def dekodowanie(odkodowana):
         tekst += chr(number)
 
     return tekst
-
-tekst = "ABCD"
-print(tekst)
-
-zakodowana = kodowanie(tekst)
-print(zakodowana)
-
-zakodowana[2][6] = 1 - zakodowana[2][6]
-print(zakodowana)
-
-poprawiona = sprawdz_poprawnosc(zakodowana)
-print(poprawiona)
-
-tekst_po_korekcie = dekodowanie(poprawiona)
-print(tekst_po_korekcie)
