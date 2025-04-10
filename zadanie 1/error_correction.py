@@ -1,3 +1,7 @@
+# Autorzy:
+# Aleksandra Jakóbik, nr indeksu: 251532
+# Lech Czochra, nr indeksu: 251497
+
 import numpy as np
 from itertools import combinations
 
