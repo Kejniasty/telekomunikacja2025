@@ -1,6 +1,13 @@
 import error_correction as ec
 import random
-# TODO: wrzucenie bledu w randomowym bicie
+
+def make_string(matrix):
+    temp_string = ''
+    for word in matrix:
+        for bit in word:
+            temp_string += str(bit)
+        temp_string += ' '
+    return temp_string
 
 # mode - a = kodowanie, b = dekodowanie, c = kodowanie -> dekodowanie
 def file_handling(input_name: str, output_name: str, errors: int, mode='a', check_errors='a') -> None:
@@ -16,20 +23,13 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
 
                 error_byte = random.randint(0, len(encoded))
                 for i in range(errors):
-                    error_bit = random.randint(0, 7)
-                    print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+                    error_bit = random.randint(0, 15)
+                    encoded[error_byte][error_bit] = 1 - encoded[error_byte][error_bit]
+                    print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
 
-                encoded[error_byte][error_bit] = 1 - encoded[error_byte][error_bit]
-
-                temp_string = ''
-                for word in encoded:
-                    for bit in word:
-                        temp_string += str(bit)
-                    temp_string += ' '
+                temp_string = make_string(encoded)
                 print("====================\nZakodowana wiadomość\n====================")
                 print(temp_string)
-
-
 
             with open(output_name, 'w') as output_file:
                 output_file.write(temp_string)
@@ -46,6 +46,8 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
                         encoded[i].append(int(bit))
                 if check_errors == 'a':
                     encoded = ec.sprawdz_poprawnosc(encoded)
+                    print("====================\nWiadomość bez błędu\n====================")
+                    print(make_string(encoded))
                 text = ec.dekodowanie(encoded)
 
             with open(output_name, 'w') as output_file:
@@ -64,21 +66,19 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
 
             error_byte = random.randint(0, len(encoded_file))
             for i in range(errors):
-                error_bit = random.randint(0, 7)
-                print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+                error_bit = random.randint(0, 15)
+                encoded_file[error_byte][error_bit] = 1 - encoded_file[error_byte][error_bit]
+                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
 
-            encoded_file[error_byte][error_bit] = 1 - encoded_file[error_byte][error_bit]
 
             print("====================\nZakodowana wiadomość\n====================")
-            temp_string = ''
-            for word in encoded_file:
-                for bit in word:
-                    temp_string += str(bit)
-                temp_string += ' '
+            temp_string = make_string(encoded_file)
             print(temp_string)
 
             if check_errors == 'a':
                 encoded_file = ec.sprawdz_poprawnosc(encoded_file)
+                print("====================\nWiadomość bez błędu\n====================")
+                print(make_string(encoded_file))
             text = ec.dekodowanie(encoded_file)
 
             print("====================\nOdkodowana wiadomość\n====================")
@@ -98,13 +98,10 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
             error_byte = random.randint(0, len(encoded_line))
             for i in range(errors):
                 error_bit = random.randint(0, 15)
-                print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+                encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
+                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
 
-            temp_string = ''
-            for word in encoded_line:
-                for bit in word:
-                    temp_string += str(bit)
-                temp_string += ' '
+            temp_string = make_string(encoded_line)
             print("====================\nZakodowana wiadomość\n====================")
             print(temp_string)
 
@@ -117,8 +114,16 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
                 for bit in line[i]:
                     encoded[i].append(int(bit))
 
+
             if check_errors == 'a':
                 encoded = ec.sprawdz_poprawnosc(encoded)
+                print("====================\nWiadomość bez błędu\n====================")
+                print(make_string(encoded))
+
+            temp_string = make_string(encoded)
+
+            print("====================\nZakodowana wiadomość\n====================")
+            print(temp_string)
             text = ec.dekodowanie(encoded)
             print("====================\nOdkodowana wiadomość\n====================")
             print(text)
@@ -128,19 +133,18 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
 
             error_byte = random.randint(0, len(encoded_line))
             for i in range(errors):
-                error_bit = random.randint(0, 7)
-                print(f"Ups! na {error_bit + 1} bicie {error_byte + 1} bajtu wkradł się błąd!")
+                error_bit = random.randint(0, 15)
+                encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
+                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
 
-            temp_string = ''
-            for word in encoded_line:
-                for bit in word:
-                    temp_string += str(bit)
-                temp_string += ' '
+            temp_string = make_string(encoded_line)
             print("====================\nZakodowana wiadomość\n====================")
             print(temp_string)
 
             if check_errors == 'a':
                 encoded_line = ec.sprawdz_poprawnosc(encoded_line)
+                print("====================\nWiadomość bez błędu\n====================")
+                print(make_string(encoded_line))
             text = ec.dekodowanie(encoded_line)
             print("====================\nOdkodowana wiadomość\n====================")
             print(text)

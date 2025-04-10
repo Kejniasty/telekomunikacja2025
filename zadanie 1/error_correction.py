@@ -1,5 +1,7 @@
 import numpy as np
+from itertools import combinations
 
+# Macierz Hamminga spełniająca wymagania do korekcji dwóch błędów (min odległość 5 między słowami kodowymi)
 H = np.array([
     [1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
     [1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
@@ -10,6 +12,8 @@ H = np.array([
     [0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0],
     [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]
 ], dtype=int)
+
+bin_to_dec = [128, 64, 32, 16, 8, 4, 2, 1]
 
 def kodowanie(tekst):
     wynik = []
@@ -23,22 +27,36 @@ def kodowanie(tekst):
 
 def sprawdz_poprawnosc(wiadomosc):
     odkodowana = []
-    for bajt in wiadomosc:
-        syndrom = np.dot(H, bajt) % 2
-        if any(syndrom):
-            for i in range(len(H[0])):
-                if np.array_equal(H[:, i], syndrom):
-                    bajt[i] = 1 - bajt[i]
+    for slowo in wiadomosc:
+        syndrom = np.dot(H, slowo) % 2
+        if not any(syndrom):
+            odkodowana.append(slowo)
+            continue
+
+        znaleziony = False
+        for i in range(len(H[0])):
+            if np.array_equal(H[:, i], syndrom):
+                slowo[i] = 1 - slowo[i]
+                znaleziony = True
+                break
+
+        if not znaleziony:
+            for i, j in combinations(range(len(H[0])), 2): # dla różnych kombinacji dwóch indeksow
+                suma_kolumn = (H[:, i] + H[:, j]) % 2 # sumujemy dwie kolumny
+                if np.array_equal(suma_kolumn, syndrom): # jeżeli syndrom jest równy sumie kolumny to znalezliśmy błędy
+                    slowo[i] = 1 - slowo[i]
+                    slowo[j] = 1 - slowo[j]
                     break
-        odkodowana.append(bajt)
+
+        odkodowana.append(slowo)
     return odkodowana
 
 def dekodowanie(odkodowana):
     tekst = ''
     for slowo in odkodowana:
         number = 0
-        for bit_index in range(7, -1, -1):
-            number += slowo[7 - bit_index] * 2**bit_index
+        for bit_index in range(8):
+            number += slowo[bit_index] * bin_to_dec[bit_index]
         tekst += chr(number)
 
     return tekst
