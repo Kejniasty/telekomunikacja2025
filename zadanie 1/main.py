@@ -152,38 +152,41 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
 
 
 if __name__ == "__main__":
-    encode = input("a. Koduj\nb. Dekoduj\nc. Pełny cykl (Koduj->Dekoduj):\n> ")
+    while True:
+        encode = input("a. Koduj\nb. Dekoduj\nc. Pełny cykl (Koduj->Dekoduj):\nd. Wyjście> ")
 
-    input_mode = input("a. Wczytaj z pliku\nb. Wpisz z klawiatury:\n> ")
-    match input_mode:
-        case 'a':
-            input_name = input("Plik wejściowy:\n> ")
-            output_name = input("Plik wyjściowy:\n> ")
-            match encode:
-                case 'a':
-                    error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
-                    file_handling(input_name, output_name, error_num, encode)
-                case 'b':
-                    check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
-                    file_handling(input_name, output_name, 1, encode, check_error_flag)
-                case 'c':
-                    error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
-                    check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
-                    file_handling(input_name, output_name, error_num, encode, check_error_flag)
-                case _:
-                    print("Zła opcja wybrana")
-        case 'b':
-            text = input("Wprowadź dowolny tekst:\n> ")
-            match encode:
-                case 'a':
-                    error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
-                    keyboard_handling(text, error_num, encode)
-                case 'b':
-                    check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
-                    keyboard_handling(text, 1, encode, check_error_flag)
-                case 'c':
-                    error_num = int(input("Wprowadź liczbę błędów do jednego z bajtów wiadomości:\n> "))
-                    check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
-                    keyboard_handling(text, error_num, encode, check_error_flag)
-                case _:
-                    print("zła opcja wybrana")
+        input_mode = input("a. Wczytaj z pliku\nb. Wpisz z klawiatury:\n> ")
+        match input_mode:
+            case 'a':
+                input_name = input("Plik wejściowy:\n> ")
+                output_name = input("Plik wyjściowy:\n> ")
+                match encode:
+                    case 'a':
+                        error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
+                        file_handling(input_name, output_name, error_num, encode)
+                    case 'b':
+                        check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
+                        file_handling(input_name, output_name, 1, encode, check_error_flag)
+                    case 'c':
+                        error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
+                        check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
+                        file_handling(input_name, output_name, error_num, encode, check_error_flag)
+                    case _:
+                        break
+            case 'b':
+                text = input("Wprowadź dowolny tekst:\n> ")
+                match encode:
+                    case 'a':
+                        error_num = int(input("Wprowadź liczbę błędów do jednego bajtów wiadomości:\n> "))
+                        keyboard_handling(text, error_num, encode)
+                    case 'b':
+                        check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
+                        keyboard_handling(text, 1, encode, check_error_flag)
+                    case 'c':
+                        error_num = int(input("Wprowadź liczbę błędów do jednego z bajtów wiadomości:\n> "))
+                        check_error_flag = input("a. Sprawdź i popraw błędy\nb. Nie sprawdzaj błędów:\n> ")
+                        keyboard_handling(text, error_num, encode, check_error_flag)
+                    case _:
+                        break
+            case _:
+                break
