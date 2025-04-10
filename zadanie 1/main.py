@@ -28,7 +28,7 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
                 print()
 
             #losujemy w którym słowie wystąpi błąd i zależnie od wybranej ilości błędów psujemy "errors" bitów
-            error_byte = random.randint(0, len(encoded))
+            error_byte = random.randint(0, len(encoded) - 1)
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded[error_byte][error_bit] = 1 - encoded[error_byte][error_bit]
@@ -83,7 +83,7 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
             print()
 
             # w wylosowanym słowie psujemy macierz
-            error_byte = random.randint(0, len(encoded_file))
+            error_byte = random.randint(0, len(encoded_file) - 1)
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_file[error_byte][error_bit] = 1 - encoded_file[error_byte][error_bit]
@@ -121,7 +121,7 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
             encoded_line = ec.kodowanie(text)
 
             # w wylosowanym słowie psujemy macierz
-            error_byte = random.randint(0, len(encoded_line))
+            error_byte = random.randint(0, len(encoded_line) - 1)
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
@@ -160,7 +160,7 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
             encoded_line = ec.kodowanie(text)
 
             # psujemy macierz w losowym słowie "errors" razy
-            error_byte = random.randint(0, len(encoded_line))
+            error_byte = random.randint(0, len(encoded_line) - 1)
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
@@ -185,7 +185,7 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
 
 if __name__ == "__main__":
     while True:
-        encode = input("a. Koduj\nb. Dekoduj\nc. Pełny cykl (Koduj->Dekoduj):\nd. Wyjście> ")
+        encode = input("a. Koduj\nb. Dekoduj\nc. Pełny cykl (Koduj->Dekoduj):\nd. Wyjście\n> ")
 
         input_mode = input("a. Wczytaj z pliku\nb. Wpisz z klawiatury:\n> ")
         match input_mode:
