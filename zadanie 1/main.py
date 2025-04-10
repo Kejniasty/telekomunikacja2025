@@ -32,7 +32,7 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded[error_byte][error_bit] = 1 - encoded[error_byte][error_bit]
-                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
+                print(f"Ups! na {16 - error_bit} bicie (od prawej) {error_byte + 1} słowa wkradł się błąd!")
 
             # zamieniamy macierz z błędem na stringa
             temp_string = make_string(encoded)
@@ -87,7 +87,7 @@ def file_handling(input_name: str, output_name: str, errors: int, mode='a', chec
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_file[error_byte][error_bit] = 1 - encoded_file[error_byte][error_bit]
-                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
+                print(f"Ups! na {16 - error_bit} bicie (od prawej) {error_byte + 1} słowa wkradł się błąd!")
 
 
             print("====================\nZakodowana wiadomość\n====================")
@@ -125,7 +125,7 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
-                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
+                print(f"Ups! na {16 - error_bit} bicie (od prawej){error_byte + 1} słowa wkradł się błąd!")
 
             # zamieniamy macierz na tekst i wyświetlamy ją na ekranie
             temp_string = make_string(encoded_line)
@@ -164,7 +164,7 @@ def keyboard_handling(text, errors, mode='a', check_errors='a'):
             for i in range(errors):
                 error_bit = random.randint(0, 15)
                 encoded_line[error_byte][error_bit] = 1 - encoded_line[error_byte][error_bit]
-                print(f"Ups! na {16 - error_bit} bicie {error_byte + 1} słowa wkradł się błąd!")
+                print(f"Ups! na {16 - error_bit} bicie (od prawej) {error_byte + 1} słowa wkradł się błąd!")
 
             # wyświetlamy zakodowaną wiadomość
             print("====================\nZakodowana wiadomość\n====================")
