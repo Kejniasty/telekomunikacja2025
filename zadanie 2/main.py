@@ -6,8 +6,11 @@ import sys
 # LC
 
 # Global variables
-BLOCK_SIZE = 128
-DEBUG_FLAG = 0
+BLOCK_SIZE = 128 # default size of data block used in the packet in bytes
+BAUDRATE = 9600 # data transfer rate in bits per second, used for the serial port opening
+TIMEOUT = 10 # default timeout time in seconds
+CTRL_Z = b"\x1A"
+
 # control characters (in hex)
 SOH = b"\x01"       # start of header
 EOT = b"\x04"       # end of transmission
@@ -16,12 +19,6 @@ NAK = b"\x15"       # negative acknowledgment
 ETB = b"\x17"       # end of transsmision block (not really used, defined in the XModem Protocol with CRC site)
 CAN = b"\x18"       # cancel transmission
 CHAR_C = b"C"       # for CRC mode
-
-
-def debug(arg):
-    """Debug print function triggered by the global flag"""
-    if DEBUG_FLAG == 1:
-        print(arg)
 
 
 def read_from_file(name: str) -> str:
@@ -38,19 +35,8 @@ def write_to_file(name: str, message: bytes):
     return
 
 
-def use_crc():
-    """Auxiliary function, basically converts the string to a boolean"""
-    crc_mode = input("Use CRC mode? [yes/no]: ").strip().lower()
-    if crc_mode in {"y", "yes"}:
-        print("CRC mode selected")
-        return True
-    else:
-        print("Checksum mode selected")
-        return False
-
-
 def calculate_checksum(block):
-    """One-byte checksum (mod 256) for the block, used for a basic variant"""
+    """One-byte checksum (mod 256) for the block, used for the basic checksum variant"""
     return sum(block) % 256
 
 
@@ -75,7 +61,7 @@ def calculate_crc(data):
 
 def pad_data(data):
     """Auxiliary function that pads a data block to 128 bytes with CTRL-Z (0x1A)"""
-    padding = b"\x1A"
+    padding = CTRL_Z
     length = len(data)
     # Check if data block's length is lower than earlier set max block's size
     if length < BLOCK_SIZE:
@@ -90,12 +76,11 @@ def split_into_blocks(message):
         block = message[i:i+BLOCK_SIZE]
         block = pad_data(block)
         blocks.append(block)
-    debug(blocks)
     return blocks
 
 
-def send_message(port: serial.Serial, message, use_crc=True, timeout=10):
-    """Sending message via XModem. Every packet has a format of
+def send_message(port: serial.Serial, message, use_crc=False):
+    """Sending message via XModem. Every packet of main communication has a format of
     "(SOH flag)[block_number][not(block_number)][128-byte data block][CRC sum/control sum]" """
     # Using UTF-8 for encoding (no polish letters :( )
     message_bytes = message.encode("utf-8")
@@ -152,7 +137,7 @@ def send_message(port: serial.Serial, message, use_crc=True, timeout=10):
             start = time.time()
             response = None
             # After sending the packet we wait for a response
-            while time.time() - start < timeout:
+            while time.time() - start < TIMEOUT:
                 if port.in_waiting > 0:
                     response = port.read(1)
                     break
@@ -182,7 +167,7 @@ def send_message(port: serial.Serial, message, use_crc=True, timeout=10):
         # We send EOT flag
         port.write(EOT)
         start = time.time()
-        while time.time() - start < timeout:
+        while time.time() - start < TIMEOUT:
             # If there is something in the port's buffer we read it
             if port.in_waiting > 0:
                 response = port.read(1)
@@ -196,11 +181,11 @@ def send_message(port: serial.Serial, message, use_crc=True, timeout=10):
     print("Receiver did not confirm end of communication.")
 
 
-def receive_message(port: serial.Serial, use_crc=True, timeout=10):
-    """Receiving a message via XModem. Every packet has a format of
+def receive_message(port: serial.Serial, use_crc=False):
+    """Receiving a message via XModem. Every packet of main communication has a format of
     "(SOH flag)[block_number][not(block_number)][128-byte data block][CRC sum/control sum]" """
 
-    # we set the checksum version
+    # we set the first flag for the type of checksum
     if use_crc:
         init_char = CHAR_C
     else:
@@ -218,12 +203,11 @@ def receive_message(port: serial.Serial, use_crc=True, timeout=10):
 
     start = time.time()
     header = None
-    while time.time() - start < timeout:
+    while time.time() - start < TIMEOUT:
         # First we wait for the SOH flag
         if port.in_waiting > 0:
             response_char = port.read(1)
             if response_char == SOH:
-                debug("Received SOH from sender!")
                 header = response_char
                 break
         time.sleep(0.1)
@@ -239,7 +223,6 @@ def receive_message(port: serial.Serial, use_crc=True, timeout=10):
 
     # if it doesn't sum to all 1's in a byte, it means that something went wrong
     if (block_num + block_num_comp) & 0xFF != 0xFF:
-        debug(f"block_num={block_num}\nblock_num_comp={block_num_comp}")
         print("Invalid block number.")
         # we send NAK to tell the sender something went wrong in the packet
         port.write(NAK)
@@ -273,7 +256,7 @@ def receive_message(port: serial.Serial, use_crc=True, timeout=10):
         # if it's alright, we send an ACK and add the block to the final message, after decoding it of course
         port.write(ACK)
         # we strip the message of ctrl-z's that are used for the padding
-        message = data.rstrip(b"\x1A")
+        message = data.rstrip(CTRL_Z)
         try:
             message.decode("utf-8")
         except UnicodeDecodeError:
@@ -283,20 +266,23 @@ def receive_message(port: serial.Serial, use_crc=True, timeout=10):
         return message
 
 
+def do_crc():
+    """Auxiliary function, basically converts a string to a boolean"""
+    crc_mode = input("Use CRC mode? [yes/no]: ").strip().lower()
+    if crc_mode in {"y", "yes"}:
+        print("CRC mode selected")
+        return True
+    else:
+        print("Checksum mode selected")
+        return False
+
 if __name__ == "__main__":
     # there is no point of me commenting the main function so hf it's not really that complicated
     port_name = ""
     while not port_name[:3] == "COM":
         port_name = input("Enter serial port (e.g., COM10):\n> ").strip().upper()
-
     try:
-        baudrate = int(input("Enter baudrate (default 9600):\n> ").strip())
-    except ValueError:
-        baudrate = 9600
-        print(f"Invalid value. Using default baudrate={baudrate}")
-
-    try:
-        ser = serial.Serial(port_name, baudrate, timeout=10)
+        ser = serial.Serial(port_name, BAUDRATE, timeout=10)
     except Exception as e:
         print("Failed to open serial port:", e)
         sys.exit(1)
@@ -308,7 +294,7 @@ if __name__ == "__main__":
               "3. Exit\n> ").strip()
         match choice:
             case "1":
-                use_crc_mode = use_crc()
+                use_crc_mode = do_crc()
                 mode = None
                 while mode not in {"1", "2"}:
                     mode = input("Choose the source of the message:\n"
@@ -323,16 +309,14 @@ if __name__ == "__main__":
                     case _:
                         print("no clue how you landed here, here have a break")
                         break
-                debug(f"use_crc: {use_crc_mode}\nmessage: '{msg}'")
                 send_message(ser, msg, use_crc=use_crc_mode)
 
             case "2":
-                use_crc_mode = use_crc()
+                use_crc_mode = do_crc()
                 mode = input("Should the message be saved in a file? [y/n]\n> ").strip().lower()
                 name = None
                 if mode in {"y", "yes"}:
                     name = input("Enter the file's name:\n> ")
-                debug(f"use_crc: {use_crc_mode}")
                 msg = receive_message(ser, use_crc=use_crc_mode)
                 if name is not None:
                     write_to_file(name, msg)
