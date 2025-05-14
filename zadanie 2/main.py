@@ -21,9 +21,9 @@ CAN = b"\x18"       # cancel transmission
 CHAR_C = b"C"       # for CRC mode
 
 
-def read_from_file(name: str) -> str:
+def read_from_file(name: str):
     """Auxiliary function, returns file's contents"""
-    with open(name, "r") as file:
+    with open(name, "rb") as file:
         message = file.read()
     return message
 
@@ -82,10 +82,8 @@ def split_into_blocks(message):
 def send_message(port: serial.Serial, message, use_crc=False):
     """Sending message via XModem. Every packet of main communication has a format of
     "(SOH flag)[block_number][not(block_number)][128-byte data block][CRC sum/control sum]" """
-    # Using UTF-8 for encoding (no polish letters :( )
-    message_bytes = message.encode("utf-8")
     # Splitting data into blocks
-    blocks = split_into_blocks(message_bytes)
+    blocks = split_into_blocks(message)
 
     print("Waiting for receiver initiation signal ('C' or 'NAK')...")
     start = time.time()
@@ -253,16 +251,11 @@ def receive_message(port: serial.Serial, use_crc=False):
         port.write(NAK)
         return False
     else:
-        # if it's alright, we send an ACK and add the block to the final message, after decoding it of course
+        # if it's alright, we send an ACK and add the block to the final message
         port.write(ACK)
         # we strip the message of ctrl-z's that are used for the padding
         message = data.rstrip(CTRL_Z)
-        try:
-            message.decode("utf-8")
-        except UnicodeDecodeError:
-            message.decode("utf-8", errors="replace")
         print(f"Message received successfully: '{message}'")
-
         return message
 
 
