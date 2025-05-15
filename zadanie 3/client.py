@@ -4,41 +4,86 @@ from collections import defaultdict
 import pickle
 
 
-def build_huffman_tree(text):
-    """Buduje drzewo Huffmana na podstawie częstotliwości znaków."""
-    freq = defaultdict(int)
+class HuffmanNode:
+    """Node of a Huffman tree, holds info on it's left and right node as well as the char and its frequency in the msg"""
+    def __init__(self, char=None, freq=0, left=None, right=None):
+        self.char = char
+        self.freq = freq
+        self.left = left
+        self.right = right
+
+    # basically the same thing as compareTo in java, used for heaps
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+
+def build_frequency_table(text):
+    """Auxiliary function, makes a dict of elements and their frequencies"""
+    frequency = defaultdict(int)
     for char in text:
-        freq[char] += 1
-
-    heap = [[weight, [char, ""]] for char, weight in freq.items()]
-    heapq.heapify(heap)
-
-    while len(heap) > 1:
-        lo = heapq.heappop(heap)
-        hi = heapq.heappop(heap)
-        for pair in lo[1:]:
-            pair[1] = '0' + pair[1]
-        for pair in hi[1:]:
-            pair[1] = '1' + pair[1]
-        heapq.heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
-
-    return sorted(heap[0][1:], key=lambda p: (len(p[-1]), p))
+        frequency[char] += 1
+    return frequency
 
 
-def encode_huffman(text):
-    """Koduje tekst za pomocą kodowania Huffmana."""
+def build_huffman_tree(frequency: defaultdict):
+    """Uses a heap to look through every node, needs a frequency table to work"""
+    priority_queue = []
+    for char, freq in frequency.items():
+        # Creating "leaf" nodes for the tree
+        node = HuffmanNode(char=char, freq=freq)
+        heapq.heappush(priority_queue, node)
+
+    # For every leaf node and the ones that are being created
+    while len(priority_queue) > 1:
+        # left are the smaller ones
+        left = heapq.heappop(priority_queue)
+        # right are the bigger or the same ones in terms of frequency
+        right = heapq.heappop(priority_queue)
+        # creating the "branch node" of the tree and adding it onto the heap
+        merged = HuffmanNode(freq=left.freq + right.freq, left=left, right=right)
+        heapq.heappush(priority_queue, merged)
+
+    # Returns the root of the tree
+    return heapq.heappop(priority_queue)
+
+
+def build_codebook(root: HuffmanNode, current_code="", codebook=None):
+    """Actually a recursive function, builds a codebook used for encoding, has the frequencies as bits"""
+    if codebook is None:
+        codebook = {}
+
+    if root is None:
+        return
+
+    # If current node is a char node (has the frequency of the given char)
+    if root.char is not None:
+        codebook[root.char] = current_code
+        return
+
+    # left is 0, right is 1 for the navigation in the Huffman's tree
+    build_codebook(root.left, current_code + "0", codebook)
+    build_codebook(root.right, current_code + "1", codebook)
+
+    return codebook
+
+
+def huffman_encode(text):
+    """Returns a string of bits and the Huffman's tree."""
     if not text:
-        return "", {}
+        return "", None
 
-    huffman_tree = build_huffman_tree(text)
-    huffman_dict = {char: code for char, code in huffman_tree}
+    # self-explanatory really, just check the functions above
+    frequency = build_frequency_table(text)
+    huffman_tree = build_huffman_tree(frequency)
+    codebook = build_codebook(huffman_tree)
 
-    encoded = "".join(huffman_dict[char] for char in text)
-    return encoded, huffman_dict
+    # converts every char into the navigation version from the codebook
+    encoded_text = ''.join([codebook[char] for char in text])
+    return encoded_text, huffman_tree
 
 
 def main():
-    HOST = '192.168.1.100'
+    HOST = '127.0.0.1'
     PORT = 65432
 
     try:
@@ -49,21 +94,21 @@ def main():
         return
 
     # Kodowanie Huffmana
-    encoded_text, huffman_dict = encode_huffman(text)
+    encoded_text, huffman_tree = huffman_encode(text)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.settimeout(10)
             s.connect((HOST, PORT))
             # Serializacja i wysyłka słownika Huffmana
-            serialized_dict = pickle.dumps(huffman_dict)
+            serialized_dict = pickle.dumps(huffman_tree)
             dict_length = len(serialized_dict)
             s.sendall(str(dict_length).encode('utf-8').zfill(16))
             s.sendall(serialized_dict)
-            # Wysłanie długości i zakodowanego tekstu
+            # Wysłanie długości i zakodowanego tekstu jako bajty
             length = len(encoded_text)
             s.sendall(str(length).encode('utf-8').zfill(16))
-            s.sendall(encoded_text.encode('utf-8'))
+            s.sendall(encoded_text.encode('ascii'))  # ascii, bo jeżeli kompresować, to na pełnej
             print("Tekst został wysłany do serwera.")
         except socket.timeout:
             print("Timeout: Serwer nie odpowiedział w ciągu 10 sekund.")
