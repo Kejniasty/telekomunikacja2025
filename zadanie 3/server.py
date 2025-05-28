@@ -17,6 +17,11 @@ def huffman_decode(encoded_text, huffman_tree):
     if not encoded_text:
         return ""
 
+    # Sprawdzenie: drzewo składa się tylko z jednego węzła
+    if huffman_tree.left is None and huffman_tree.right is None:
+        # Każdy bit oznacza ten jeden znak
+        return huffman_tree.char * len(encoded_text)
+
     current_node = huffman_tree
     decoded_text = []
 
@@ -30,6 +35,7 @@ def huffman_decode(encoded_text, huffman_tree):
         if current_node.char is not None:
             decoded_text.append(current_node.char)
             current_node = huffman_tree
+
 
     return ''.join(decoded_text)
 

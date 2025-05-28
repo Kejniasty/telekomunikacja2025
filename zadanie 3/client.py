@@ -53,12 +53,13 @@ def build_codebook(root: HuffmanNode, current_code="", codebook=None):
         codebook = {}
 
     if root is None:
-        return
+        return codebook
 
     # If current node is a char node (has the frequency of the given char)
     if root.char is not None:
-        codebook[root.char] = current_code
-        return
+        # Jeśli tylko jeden znak, przypisz "0" jako domyślny kod
+        codebook[root.char] = current_code if current_code != "" else "0"
+        return codebook
 
     # left is 0, right is 1 for the navigation in the Huffman's tree
     build_codebook(root.left, current_code + "0", codebook)
@@ -83,7 +84,7 @@ def huffman_encode(text):
 
 
 def main():
-    HOST = '127.0.0.1'
+    HOST = '192.168.118.53'
     PORT = 65432
 
     try:
